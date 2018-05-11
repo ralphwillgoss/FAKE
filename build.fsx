@@ -55,11 +55,8 @@ open System.Reflection
 
 #endif
 
-//#if !FAKE
-//let execContext = Fake.Core.Context.FakeExecutionContext.Create false "build.fsx" []
-//Fake.Core.Context.setExecutionContext (Fake.Core.Context.RuntimeContext.Fake execContext)
-//#endif
-// #load "src/app/Fake.DotNet.FSFormatting/FSFormatting.fs"
+#load "legacy_build.fsx"
+
 open System.IO
 open Fake.Api
 open Fake.Core
@@ -90,17 +87,6 @@ let gitName = "FAKE"
 
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
 
-let packages =
-    ["FAKE.Core",projectDescription
-     "FAKE.Gallio",projectDescription + " Extensions for Gallio"
-     "FAKE.IIS",projectDescription + " Extensions for IIS"
-     "FAKE.FluentMigrator",projectDescription + " Extensions for FluentMigrator"
-     "FAKE.SQL",projectDescription + " Extensions for SQL Server"
-     "FAKE.Experimental",projectDescription + " Experimental Extensions"
-     "FAKE.Deploy.Lib",projectDescription + " Extensions for FAKE Deploy"
-     projectName,projectDescription + " This package bundles all extensions."
-     "FAKE.Lib",projectDescription + " FAKE helper functions as library"]
-
 let buildDir = "./build"
 let testDir = "./test"
 let docsDir = "./docs"
@@ -115,13 +101,6 @@ let root = __SOURCE_DIRECTORY__
 let srcDir = root</>"src"
 let appDir = srcDir</>"app"
 let legacyDir = srcDir</>"legacy"
-
-let additionalFiles = [
-    "License.txt"
-    "README.markdown"
-    "RELEASE_NOTES.md"
-    "./packages/FSharp.Core/lib/net45/FSharp.Core.sigdata"
-    "./packages/FSharp.Core/lib/net45/FSharp.Core.optdata"]
 
 let nuget_exe = Directory.GetCurrentDirectory() </> "packages" </> "build" </> "NuGet.CommandLine" </> "tools" </> "NuGet.exe"
 let apikey = Environment.environVarOrDefault "nugetkey" ""
@@ -254,51 +233,6 @@ Target.create "Clean" (fun _ ->
     cleanForTests()
 )
 
-Target.create "RenameFSharpCompilerService" (fun _ ->
-  for packDir in ["FSharp.Compiler.Service";"netcore"</>"FSharp.Compiler.Service"] do
-    // for framework in ["net40"; "net45"] do
-    for framework in ["netstandard2.0"; "net45"] do
-      let dir = __SOURCE_DIRECTORY__ </> "packages"</>packDir</>"lib"</>framework
-      let targetFile = dir </>  "FAKE.FSharp.Compiler.Service.dll"
-      File.delete targetFile
-
-#if DOTNETCORE
-      let reader =
-          let searchpaths =
-              [ dir; __SOURCE_DIRECTORY__ </> "packages/FSharp.Core/lib/net45" ]
-          let resolve name =
-              let n = AssemblyName(name)
-              match searchpaths
-                      |> Seq.collect (fun p -> Directory.GetFiles(p, "*.dll"))
-                      |> Seq.tryFind (fun f -> f.ToLowerInvariant().Contains(n.Name.ToLowerInvariant())) with
-              | Some f -> f
-              | None ->
-                  failwithf "Could not resolve '%s'" name
-          let readAssemblyE (name:string) (parms: Mono.Cecil.ReaderParameters) =
-              Mono.Cecil.AssemblyDefinition.ReadAssembly(
-                  resolve name,
-                  parms)
-          let readAssembly (name:string) (x:Mono.Cecil.IAssemblyResolver) =
-              readAssemblyE name (new Mono.Cecil.ReaderParameters(AssemblyResolver = x))
-          { new Mono.Cecil.IAssemblyResolver with
-              member x.Dispose () = ()
-              //member x.Resolve (name : string) = readAssembly name x
-              //member x.Resolve (name : string, parms : Mono.Cecil.ReaderParameters) = readAssemblyE name parms
-              member x.Resolve (name : Mono.Cecil.AssemblyNameReference) = readAssembly name.FullName x
-              member x.Resolve (name : Mono.Cecil.AssemblyNameReference, parms : Mono.Cecil.ReaderParameters) = readAssemblyE name.FullName parms
-               }
-#else
-      let reader = new Mono.Cecil.DefaultAssemblyResolver()
-      reader.AddSearchDirectory(dir)
-      reader.AddSearchDirectory(__SOURCE_DIRECTORY__ </> "packages/FSharp.Core/lib/net45")
-#endif
-      let readerParams = Mono.Cecil.ReaderParameters(AssemblyResolver = reader)
-      let asem = Mono.Cecil.AssemblyDefinition.ReadAssembly(dir </>"FSharp.Compiler.Service.dll", readerParams)
-      asem.Name <- Mono.Cecil.AssemblyNameDefinition("FAKE.FSharp.Compiler.Service", System.Version(1,0,0,0))
-      asem.Write(dir</>"FAKE.FSharp.Compiler.Service.dll")
-)
-
-
 let common = [
     AssemblyInfo.Product "FAKE - F# Make"
     AssemblyInfo.Version release.AssemblyVersion
@@ -367,34 +301,11 @@ let dotnetAssemblyInfos =
       "Fake.Windows.Registry", "CRUD functionality for Windows registry" ]
 
 let assemblyInfos =
-  [ legacyDir </> "FAKE/AssemblyInfo.fs",
-      [ AssemblyInfo.Title "FAKE - F# Make Command line tool"
-        AssemblyInfo.Guid "fb2b540f-d97a-4660-972f-5eeff8120fba"] @ common
-    legacyDir </> "Fake.Deploy/AssemblyInfo.fs",
-      [ AssemblyInfo.Title "FAKE - F# Make Deploy tool"
-        AssemblyInfo.Guid "413E2050-BECC-4FA6-87AA-5A74ACE9B8E1"] @ common
-    legacyDir </> "deploy.web/Fake.Deploy.Web/AssemblyInfo.fs",
-      [ AssemblyInfo.Title "FAKE - F# Make Deploy Web"
-        AssemblyInfo.Guid "27BA7705-3F57-47BE-B607-8A46B27AE876"] @ common
-    legacyDir </> "Fake.Deploy.Lib/AssemblyInfo.fs",
-      [ AssemblyInfo.Title "FAKE - F# Make Deploy Lib"
-        AssemblyInfo.Guid "AA284C42-1396-42CB-BCAC-D27F18D14AC7"] @ common
-    legacyDir </> "FakeLib/AssemblyInfo.fs",
-      [ AssemblyInfo.Title "FAKE - F# Make Lib"
-        AssemblyInfo.InternalsVisibleTo "Test.FAKECore"
-        AssemblyInfo.Guid "d6dd5aec-636d-4354-88d6-d66e094dadb5"] @ common
-    legacyDir </> "Fake.SQL/AssemblyInfo.fs",
-      [ AssemblyInfo.Title "FAKE - F# Make SQL Lib"
-        AssemblyInfo.Guid "A161EAAF-EFDA-4EF2-BD5A-4AD97439F1BE"] @ common
-    legacyDir </> "Fake.Experimental/AssemblyInfo.fs",
-      [ AssemblyInfo.Title "FAKE - F# Make Experimental Lib"
-        AssemblyInfo.Guid "5AA28AED-B9D8-4158-A594-32FE5ABC5713"] @ common
-    legacyDir </> "Fake.FluentMigrator/AssemblyInfo.fs",
-      [ AssemblyInfo.Title "FAKE - F# Make FluentMigrator Lib"
-        AssemblyInfo.Guid "E18BDD6F-1AF8-42BB-AEB6-31CD1AC7E56D"] @ common ] @
-   (dotnetAssemblyInfos
-    |> List.map (fun (project, description) ->
-        appDir </> sprintf "%s/AssemblyInfo.fs" project, [AssemblyInfo.Title (sprintf "FAKE - F# Make %s" description) ] @ common))
+    (Legacy_build.assemblyInfos |> List.map (fun ass -> ass @ common))
+    @
+       (dotnetAssemblyInfos
+        |> List.map (fun (project, description) ->
+            appDir </> sprintf "%s/AssemblyInfo.fs" project, [AssemblyInfo.Title (sprintf "FAKE - F# Make %s" description) ] @ common))
 
 Target.create "SetAssemblyInfo" (fun _ ->
     for assemblyFile, attributes in assemblyInfos do
@@ -423,17 +334,6 @@ Target.create "UnskipAndRevertAssemblyInfo" (fun _ ->
         Git.CommandHelper.directRunGitCommandAndFail "." (sprintf "update-index --no-skip-worktree %s" assemblyFile)
         Git.CommandHelper.directRunGitCommandAndFail "." (sprintf "checkout HEAD %s" assemblyFile)
         ()
-)
-
-Target.create "_BuildSolution" (fun _ ->
-    MSBuild.runWithDefaults "Build" ["./src/Legacy-FAKE.sln"; "./src/Legacy-FAKE.Deploy.Web.sln"]
-    |> Trace.logItems "AppBuild-Output: "
-    
-    Directory.ensure "temp"
-    let testZip = "temp/tests-legacy.zip"
-    !! "test/**"
-    |> Zip.zip "." testZip
-    publish testZip
 )
 
 Target.create "GenerateDocs" (fun _ ->
