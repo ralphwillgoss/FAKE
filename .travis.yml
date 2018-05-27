@@ -3,8 +3,7 @@ sudo: required
 dist: trusty # Ubuntu 14.04
 dotnet : 2.1.4
 env:
- - HOME=/home/travis APPDATA=/home/travis LocalAppData=/home/travis
-
+ - HOME=/home/travis APPDATA=/home/travis LocalAppData=/home/travis FAKE_DETAILED_ERRORS=true
 
 before install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update               ; fi
