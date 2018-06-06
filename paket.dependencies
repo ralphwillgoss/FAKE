@@ -103,36 +103,36 @@ group Build
 // [ FAKE GROUP ]
 group NetcoreBuild
     source https://api.nuget.org/v3/index.json
-    //source https://www.myget.org/F/fake-vsts/api/v3/index.json
+    source https://www.myget.org/F/fake-vsts/api/v3/index.json
     storage: none
     //source https://ci.appveyor.com/nuget/fake
 
     nuget FSharp.Core ~> 4.1
     nuget Suave
-    nuget System.AppContext prerelease
-    nuget Paket.Core prerelease
-    nuget Fake.Api.GitHub prerelease
-    nuget Fake.Core.Target prerelease
-    nuget Fake.Core.SemVer prerelease
-    nuget Fake.BuildServer.AppVeyor prerelease
-    nuget Fake.BuildServer.TeamCity prerelease
-    nuget Fake.BuildServer.Travis prerelease
-    nuget Fake.BuildServer.TeamFoundation prerelease
-    nuget Fake.BuildServer.GitLab prerelease
-    nuget Fake.IO.FileSystem prerelease
-    nuget Fake.IO.Zip prerelease
-    nuget Fake.Core.ReleaseNotes prerelease
-    nuget Fake.DotNet.AssemblyInfoFile prerelease
-    nuget Fake.DotNet.MsBuild prerelease
-    nuget Fake.DotNet.Cli prerelease
-    nuget Fake.DotNet.NuGet prerelease
-    nuget Fake.DotNet.Paket prerelease
-    nuget Fake.DotNet.FSFormatting prerelease
-    nuget Fake.DotNet.Testing.MSpec prerelease
-    nuget Fake.DotNet.Testing.XUnit2 prerelease
-    nuget Fake.DotNet.Testing.NUnit prerelease
-    nuget Fake.Windows.Chocolatey prerelease
-    nuget Fake.Tools.Git prerelease
+    nuget System.AppContext
+    nuget Paket.Core
+    nuget Fake.Api.GitHub
+    nuget Fake.Core.Target
+    nuget Fake.Core.SemVer
+    nuget Fake.BuildServer.AppVeyor
+    nuget Fake.BuildServer.TeamCity
+    nuget Fake.BuildServer.Travis
+    nuget Fake.BuildServer.TeamFoundation
+    nuget Fake.BuildServer.GitLab
+    nuget Fake.IO.FileSystem
+    nuget Fake.IO.Zip
+    nuget Fake.Core.ReleaseNotes
+    nuget Fake.DotNet.AssemblyInfoFile
+    nuget Fake.DotNet.MsBuild
+    nuget Fake.DotNet.Cli
+    nuget Fake.DotNet.NuGet
+    nuget Fake.DotNet.Paket
+    nuget Fake.DotNet.FSFormatting
+    nuget Fake.DotNet.Testing.MSpec
+    nuget Fake.DotNet.Testing.XUnit2
+    nuget Fake.DotNet.Testing.NUnit
+    nuget Fake.Windows.Chocolatey
+    nuget Fake.Tools.Git
     nuget Mono.Cecil prerelease
     nuget Octokit
     nuget Newtonsoft.Json
