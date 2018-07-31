@@ -165,8 +165,8 @@ let internal compileGlobToRegex pattern =
             (xTOyMap |> Map.tryFind matched).Value |> snd
         )
         "^" + replaced + "$"
-
-    Regex(regexPattern)
+ 
+    Regex(regexPattern, RegexOptions.IgnoreCase)
 
 let private globRegexCache = System.Collections.Concurrent.ConcurrentDictionary<string, Regex>()
 

@@ -25,6 +25,16 @@ let tests =
                 "folder/file2.exe" ] }
       Expect.equal true (globExe.IsMatch "folder/test.exe") "Glob should match relative paths"
       Expect.equal true (globExe.IsMatch (Path.GetFullPath "folder/test.exe")) "Glob should match full paths"
+
+    testCase "Test IsMatch works on Paths and is case insensitive" <| fun _ ->
+      let globExe =
+          { Fake.IO.Globbing.ResolvedGlobbingPattern.BaseDirectory = Path.GetFullPath "."
+            Fake.IO.Globbing.ResolvedGlobbingPattern.Includes = [ "folder/*.exe" ]
+            Fake.IO.Globbing.ResolvedGlobbingPattern.Excludes = []
+            Fake.IO.Globbing.ResolvedGlobbingPattern.Results = [] }
+      Expect.equal true (globExe.IsMatch "FoLdEr/test.exe") "Glob should match relative paths"
+      Expect.equal true (globExe.IsMatch (Path.GetFullPath "folder/tEsT.exe")) "Glob should match full paths"
+
     testCase "It should resolve multiple directories" <| fun _ ->
         let fileIncludes = getFileIncludeWithKnownBaseDir [@"test1\bin\*.dll"; @"test2\bin\*.dll"]
         let dirIncludes = GlobbingPattern.getBaseDirectoryIncludes(fileIncludes)
